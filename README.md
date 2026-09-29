@@ -130,6 +130,8 @@ Two views, 224x224 NHWC `uint8`, batch 1.
 | Jetson AGX Orin | BF16 | 117.3 ms | 25.34 ms |
 | RTX 4090 | BF16 | 20.9 ms | 5.24 ms |
 
+[Benchmark and LIBERO evaluation](doc/pi0-fast.md).
+
 ### GR00T N1.7
 
 One or two views, batch 1. Best recorded P50.
@@ -141,11 +143,18 @@ One or two views, batch 1. Best recorded P50.
 | Jetson AGX Orin | BF16 | 75.778 ms | 84.864 ms |
 | Jetson AGX Orin | W8A8 | 56.711 ms | 64.924 ms |
 
+[Benchmark and LIBERO evaluation](doc/gr00t-n1.7.md).
+
 ### Qwen-Drive
 
-Jetson AGX Thor SM110, BF16 direct planning, batch 1, 10 flow steps and 12 input
-frames: request P50 **482.60 ms** from decoded images to host trajectory.
-[Test setup and results](https://github.com/infinigence/ApxInf/blob/7ea8fb1e0bffac3e6410ee18be74054e6d6411c2/doc/qwen-drive-benchmark.md).
+Direct planning, batch 1, 10 flow steps and 12 input frames. Request P50 from
+decoded images to host trajectory.
+
+| Hardware | Precision | Latency | NAVSIM PDM (242 scenes) |
+|---|---|---:|---:|
+| Jetson AGX Thor | BF16 | 482.60 ms | 85.6786 |
+
+[Benchmark and trajectory evaluation](doc/qwen-drive.md).
 
 
 ## Port a new model with an agent

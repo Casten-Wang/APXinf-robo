@@ -1,4 +1,4 @@
-"""Cross-repository loader contract for the PR #94 engine pin."""
+"""Cross-repository loader contracts for the pinned engine."""
 
 import json
 from types import SimpleNamespace
@@ -55,6 +55,32 @@ def test_qwen_drive_options_pass_through(tmp_path, monkeypatch):
     assert seen == [{"model_variant": "bf16", "mode": "direct_planning", "planner": "/ckpt/planner"}]
 
 
+def test_qwen_drive_cli_precision_uses_model_variant(tmp_path, monkeypatch):
+    (tmp_path / "config.json").write_text(json.dumps({"model_type": "qwen_drive"}))
+    seen = []
+    monkeypatch.setattr(
+        engine, "require_apxinf",
+        lambda: SimpleNamespace(
+            AutoPolicy=SimpleNamespace(from_pretrained=lambda *a, **kw: seen.append(kw))
+        ),
+    )
+    engine.load_policy(tmp_path, precision="bf16", planner="/ckpt/planner")
+    assert seen == [{"model_variant": "bf16", "planner": "/ckpt/planner"}]
+
+
+def test_qwen_drive_bare_loader_uses_model_variant(monkeypatch):
+    seen = []
+    monkeypatch.setattr(
+        engine, "require_apxinf",
+        lambda: SimpleNamespace(
+            ModelRunner=SimpleNamespace(load=lambda *args, **kwargs: seen.append((args, kwargs)))
+        ),
+    )
+    engine.load_bare_model("/ckpt/qwen-drive", model="qwen_drive", precision="bf16")
+    assert seen == [(("qwen_drive", "/ckpt/qwen-drive"),
+                     {"device": "cuda:0", "model_variant": "bf16"})]
+
+
 def test_walloss_keeps_precision(tmp_path, monkeypatch):
     (tmp_path / "config.json").write_text(
         json.dumps(
@@ -69,6 +95,20 @@ def test_walloss_keeps_precision(tmp_path, monkeypatch):
     from apxinf.policies.auto import _read_model_type
 
     assert _read_model_type(tmp_path) == "walloss"
+    seen = []
+    monkeypatch.setattr(
+        engine, "require_apxinf",
+        lambda: SimpleNamespace(
+            AutoPolicy=SimpleNamespace(from_pretrained=lambda *a, **kw: seen.append(kw))
+        ),
+    )
+    engine.load_policy(tmp_path, precision="bf16")
+    assert seen == [{"precision": "bf16"}]
+
+
+@pytest.mark.parametrize("model_type", ["pi0_fast", "gr00t"])
+def test_other_vla_families_keep_precision(tmp_path, monkeypatch, model_type):
+    (tmp_path / "config.json").write_text(json.dumps({"model_type": model_type}))
     seen = []
     monkeypatch.setattr(
         engine, "require_apxinf",
